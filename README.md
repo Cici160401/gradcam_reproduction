@@ -35,69 +35,71 @@ To capture the activations from the target convolutional layer, I registered a f
 
 ### **5. Computing Gradients**
 
-After selecting the target class score \(y^c\), I performed backpropagation to obtain the gradients of the class score with respect to the activations of the target convolutional layer:
+After selecting the target class score $y^c$, I performed backpropagation to obtain the gradients of the class score with respect to the activations of the target convolutional layer:
 
-\[
+$$
 \frac{\partial y^c}{\partial A_{ij}^{k}}
-\]
+$$
 
-These gradients represent how sensitive the score of class \(c\) is to each activation in the feature maps. The resulting gradients have a shape of `[1, 2048, 7, 7]`, the same shape as the activations, because each spatial activation has its corresponding gradient.
+These gradients represent how sensitive the score of class $c$ is to each activation in the feature maps. The resulting gradients have a shape of `[1, 2048, 7, 7]`, the same shape as the activations, because each spatial activation has its corresponding gradient.
 
 
 ### **6. Computing Channel Importance Weights**
 
 After obtaining the gradients, I calculated the importance of each feature map for the target class. Following the Grad-CAM equation, the gradients of each feature map are averaged over its spatial dimensions:
 
-\[
+$$
 \alpha_k^c =
 \frac{1}{Z}
 \sum_i \sum_j
 \frac{\partial y^c}{\partial A_{ij}^{k}}
-\]
+$$
 
-Since every feature map has a spatial size of \(7 \times 7\), its 49 gradient values are averaged to obtain one importance weight \(\alpha_k^c\) for each feature map.
+Since every feature map has a spatial size of $7 \times 7$, its 49 gradient values are averaged to obtain one importance weight $\alpha_k^c$ for each feature map.
 
 This changes the shape from `[1, 2048, 7, 7]` to `[1, 2048]`, giving one importance weight for each of the 2048 feature maps.
 
 
 ### **7. Building the Grad-CAM Localization Map**
 
-Once the importance weights were calculated, each feature map \(A^k\) was multiplied by its corresponding weight \(\alpha_k^c\). This gives more influence to the feature maps that are more important for the target class.
+Once the importance weights were calculated, each feature map $A^k$ was multiplied by its corresponding weight $\alpha_k^c$. This gives more influence to the feature maps that are more important for the target class.
 
 The weighted feature maps were then summed across the 2048 channels and ReLU was applied:
 
-\[
+$$
 L_{\text{Grad-CAM}}^c =
-ReLU\left(
+\operatorname{ReLU}
+\left(
 \sum_k \alpha_k^c A^k
 \right)
-\]
+$$
 
-ReLU keeps the positive contributions to the target class and removes the negative values. After summing the 2048 weighted feature maps, the resulting Grad-CAM localization map has a spatial size of \(7 \times 7\).
+ReLU keeps the positive contributions to the target class and removes the negative values. After summing the 2048 weighted feature maps, the resulting Grad-CAM localization map has a spatial size of $7 \times 7$.
 
 
 ### **8. Visualization**
 
-The \(7 \times 7\) Grad-CAM localization map was first normalized between 0 and 1. It was then resized to \(224 \times 224\), the same spatial size as the image used as input by ResNet50.
+The $7 \times 7$ Grad-CAM localization map was first normalized between 0 and 1. It was then resized to $224 \times 224$, the same spatial size as the image used as input by ResNet50.
 
 I used bilinear interpolation for the resize because the Grad-CAM output is a continuous heatmap rather than a discrete class mask. Finally, the resized heatmap was overlaid on the input image to visualize which regions had a higher positive contribution to the target class score.
 
-It is important to note that resizing the heatmap from \(7 \times 7\) to \(224 \times 224\) does not add new spatial information. It only makes the original Grad-CAM map easier to visualize over the input image.
+It is important to note that resizing the heatmap from $7 \times 7$ to $224 \times 224$ does not add new spatial information. It only makes the original Grad-CAM map easier to visualize over the input image.
 
 
 ## **Results**
 
 For the first experiment, ResNet50 predicted the input image as a `golden retriever`. The Grad-CAM localization map showed the strongest positive contributions mainly around regions of the dog's face.
 
-The final heatmap was obtained from the original \(7 \times 7\) Grad-CAM map and resized to \(224 \times 224\) for visualization. The result shows where the model obtained positive evidence for the selected class, but it should not be interpreted as an exact segmentation of the object.
+The final heatmap was obtained from the original $7 \times 7$ Grad-CAM map and resized to $224 \times 224$ for visualization. The result shows where the model obtained positive evidence for the selected class, but it should not be interpreted as an exact segmentation of the object.
 
-![alt text](assets/examples/image-2.png)
+![Grad-CAM visualization for the golden retriever example](assets/examples/image-2.png)
+
 
 ## **Validation**
 
 To verify the implementation, I compared my Grad-CAM result with the `pytorch-grad-cam` reference implementation using the same ResNet50 model, input image, target class, and target convolutional layer.
 
-The first comparison between the final \(224 \times 224\) heatmaps produced:
+The first comparison between the final $224 \times 224$ heatmaps produced:
 
 - Mean Absolute Difference (MAE): approximately `0.0012`
 - Correlation: approximately `1.0`
@@ -112,15 +114,15 @@ To investigate this difference, I applied the same min-max normalization to both
 
 This showed that the initial difference was related to scaling or post-processing rather than a meaningful difference in the spatial pattern produced by Grad-CAM.
 
-I also compared the channel importance weights \(\alpha_k^c\) calculated by my implementation with the weights calculated from the gradients captured by the reference implementation. Both contained 2048 importance weights and the maximum difference was:
+I also compared the channel importance weights $\alpha_k^c$ calculated by my implementation with the weights calculated from the gradients captured by the reference implementation. Both contained 2048 importance weights and the maximum difference was:
 
 `Alpha max difference: 0.0`
 
 This means that, for this experiment, the calculation of the Grad-CAM channel importance weights was identical between both implementations.
 
-The final validation step will compare the raw \(7 \times 7\) Grad-CAM maps before normalization, resizing, colormap application, or overlay. This will allow the core Grad-CAM calculation to be compared independently from the visualization and post-processing steps.
+The final validation step will compare the raw $7 \times 7$ Grad-CAM maps before normalization, resizing, colormap application, or overlay. This will allow the core Grad-CAM calculation to be compared independently from the visualization and post-processing steps.
 
-> **TODO:** Complete raw \(7 \times 7\) CAM validation.
+> **TODO:** Complete raw $7 \times 7$ CAM validation.
 
 
 
