@@ -1,0 +1,6 @@
+# Ignora las credenciales y llaves secretas
+.env
+
+# Ignora la carpeta del entorno virtual de Python
+.venv/
+venv/
