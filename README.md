@@ -67,9 +67,8 @@ Once the importance weights were calculated, each feature map $A^k$ was multipli
 The weighted feature maps were then summed across the 2048 channels and ReLU was applied:
 
 $$
-L_{\text{Grad-CAM}}^c =
-\operatorname{ReLU}
-\left(
+L_{\mathrm{Grad-CAM}}^c =
+\mathrm{ReLU}\left(
 \sum_k \alpha_k^c A^k
 \right)
 $$
