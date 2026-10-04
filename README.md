@@ -19,7 +19,7 @@ CNNs achieve strong performance but their predictions are difficult to interpret
 
 I used a ResNet50 model pretrained on ImageNet. The model was used only for inference and was not fine-tuned or retrained. The input image was preprocessed using the transformations associated with the pretrained weights. After preprocessing, the image tensor had a shape of `[3, 224, 224]`. `unsqueeze(0)` was used to add the batch dimension to the input tensor because ResNet50 expects its input in batched form, resulting in a shape of `[1, 3, 224, 224]`.
 
-![alt text](image-1.png)
+![alt text](assets/examples/image-1.png)
 
 ### 2. Target convolutional 
 
@@ -91,7 +91,7 @@ For the first experiment, ResNet50 predicted the input image as a `golden retrie
 
 The final heatmap was obtained from the original \(7 \times 7\) Grad-CAM map and resized to \(224 \times 224\) for visualization. The result shows where the model obtained positive evidence for the selected class, but it should not be interpreted as an exact segmentation of the object.
 
-![alt text](image-2.png)
+![alt text](assets/examples/image-2.png)
 
 ## **Validation**
 
