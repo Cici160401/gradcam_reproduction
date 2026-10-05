@@ -200,3 +200,10 @@ PENDING TO DO.
 
 ## References
 
+
+## Reflexión Personal
+
+Lo que más disfruté de reproducir el paper fue haberlo entendido muchísimo mejor luego de ponerlo en práctica, no es lo mismo que solo leerlo, reproducirlo te permite entenderlo a un nivel superior. Leer las ecuaciones es chévere, pero ponerlas en práctica en código es muchísimo mejor! :)
+
+
+
