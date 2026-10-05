@@ -125,18 +125,78 @@ The final validation step will compare the raw $7 \times 7$ Grad-CAM maps before
 
 After comparing the raw Grad-CAM maps from my implementation and pytorch-grad-cam before post-processing, using MAE, maximum difference, and correlation, I can conclude that the small differences observed in the previous comparison were associated with scaling/post-processing of the final maps. For this case, the raw $7 \times 7$ Grad-CAM produced by my implementation matched the raw map reconstructed from the reference implementation exactly (MAE = 0.0, maximum difference = 0.0, correlation = 1.0). This confirms that the core Grad-CAM computation is numerically equivalent to the reference for the tested model, input, target class, and target layer.
 
-
-### Reference implementation
-### Output comparison
-### Raw Grad-CAM validation
-
 ## Experiments
-[pendiente]
+
+### `01_basic_gradcam.py`
+
+Runs the complete Grad-CAM pipeline using the custom implementation:
+
+1. loads pretrained ResNet50;
+2. preprocesses an input image using the transformations associated with the
+   ImageNet weights;
+3. selects the predicted class;
+4. generates the raw Grad-CAM map;
+5. normalizes and resizes the map;
+6. creates the heatmap and visualization overlay.
+
+### `02_evaluation.py`
+
+PENDING, TO DO.
 
 ## Repository structure
 
+```text
+gradcam-reproduction/
+├── assets/
+│   └── examples/              # Example input images and README assets
+│
+├── experiments/
+│   ├── 01_basic_gradcam.py    # Basic experiment using the custom implementation
+│   └── 02_evaluation.py       # Validation against the reference implementation
+│
+├── notebooks/
+│   └── exploration.ipynb      # Step-by-step exploration and initial reproduction
+│
+├── results/
+│   ├── figures/               # Generated visualizations
+│   └── tables/                # Evaluation results
+│
+├── src/
+│   ├── gradcam.py             # From-scratch Grad-CAM implementation
+│   ├── model.py               # Model-related utilities
+│   └── visualization.py      # CAM post-processing and visualization utilities
+│
+├── README.md
+└── requirements.txt
+```
+
 ## Installation and usage
+
+PENDING TO DO.
 
 ## Key takeaways
 
+- Grad-CAM does not directly produce a high-resolution explanation. For the
+  selected ResNet50 layer, the actual localization map is only `7×7`.
+
+- The class-discriminative behavior comes from computing gradients with respect
+  to a specific target-class score $y^c$.
+
+- Global Average Pooling of the gradients produces one importance weight
+  $\alpha_k^c$ for each feature map.
+
+- ReLU keeps the spatial regions that make a positive contribution to the
+  target class.
+
+- Resizing the `7×7` map to `224×224` improves visualization but does not add
+  new spatial information.
+
+- Visualization and Grad-CAM computation are different stages. Normalization,
+  interpolation, colormaps, and overlays can introduce numerical differences
+  even when the underlying Grad-CAM maps are equivalent.
+
+- Comparing raw intermediate results is therefore important when validating
+  explainability implementations.
+
 ## References
+
