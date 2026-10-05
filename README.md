@@ -121,8 +121,9 @@ This means that, for this experiment, the calculation of the Grad-CAM channel im
 
 The final validation step will compare the raw $7 \times 7$ Grad-CAM maps before normalization, resizing, colormap application, or overlay. This will allow the core Grad-CAM calculation to be compared independently from the visualization and post-processing steps.
 
-> **TODO:** Complete raw $7 \times 7$ CAM validation.
+> **Complete raw $7 \times 7$ CAM validation.** 
 
+After comparing the raw Grad-CAM maps from my implementation and pytorch-grad-cam before post-processing, using MAE, maximum difference, and correlation, I can conclude that the small differences observed in the previous comparison were associated with scaling/post-processing of the final maps. For this case, the raw $7 \times 7$ Grad-CAM produced by my implementation matched the raw map reconstructed from the reference implementation exactly (MAE = 0.0, maximum difference = 0.0, correlation = 1.0). This confirms that the core Grad-CAM computation is numerically equivalent to the reference for the tested model, input, target class, and target layer.
 
 
 ### Reference implementation
