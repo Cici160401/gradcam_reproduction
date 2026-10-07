@@ -3,6 +3,8 @@ from torchvision.models import ResNet50_Weights, resnet50
 from PIL import Image
 from src.visualization import create_heatmap, normalize_cam,resize_cam,  overlay_heatmap, show_gradcam
 
+#└── ¿Mi implementación funciona de principio a fin?
+
 
 weights = ResNet50_Weights.DEFAULT
 model = resnet50(weights=weights)
