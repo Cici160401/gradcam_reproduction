@@ -22,8 +22,7 @@ gradcam = GradCAM(model, target_layer)
 class_names = weights.meta["categories"]
 
 
-}
-}
+
 def predict_and_explain(image):
     """
     Predict the image class and generate a Grad-CAM explanation.
