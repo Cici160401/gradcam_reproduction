@@ -1,31 +1,37 @@
+
 import numpy as np
 import torch
+import matplotlib
 
 from torchvision.models import ResNet50_Weights, resnet50
+
 from src.gradcam import GradCAM
 from src.visualization import normalize_cam, resize_cam
 
 
-# 1. Cargar modelo preentrenado ResNet50
+# Load pretrained ResNet50
 weights = ResNet50_Weights.DEFAULT
 model = resnet50(weights=weights)
 model.eval()
 
-# 2. Definir la capa objetivo para Grad-CAM y preprocesamiento de la imagen
-target_layer = model.layer4[2].conv3
+# Define preprocessing and target layer
 preprocess = weights.transforms()
+target_layer = model.layer4[2].conv3
 
-# 3. Inicializar Grad-CAM con el modelo y la capa objetivo
+# Initialize Grad-CAM
 gradcam = GradCAM(model, target_layer)
 
-# 4. Etiquetas o Labels de ImageNet
+# ImageNet class names
 class_names = weights.meta["categories"]
 
+# Normalization parameters
+mean = torch.tensor(preprocess.mean).view(3, 1, 1)
+std = torch.tensor(preprocess.std).view(3, 1, 1)
 
 
 def predict_and_explain(image):
     """
-    Predict the image class and generate a Grad-CAM explanation.
+    Predict an image class and generate a Grad-CAM explanation.
 
     Args:
         image: PIL.Image.Image
@@ -37,58 +43,84 @@ def predict_and_explain(image):
         overlay: np.ndarray
     """
 
-    # 5. Preprocesar la imagen y convertirla a tensor
+    # 1. Prepare input image
     image = image.convert("RGB")
     input_tensor = preprocess(image).unsqueeze(0)
 
-    # 6. Predecir clase }
+    # 2. Run classification and Grad-CAM
+    # Gradients must remain enabled for Grad-CAM.
     with torch.enable_grad():
-        output = model(input_tensor)
-        probabilities = torch.softmax(output, dim=1)
 
+        output = model(input_tensor)
+
+        probabilities = torch.softmax(output, dim=1)
         target_class = output.argmax(dim=1).item()
+
         confidence = probabilities[0, target_class].item()
 
-        # 7. Generate raw Grad-CAM
         model.zero_grad(set_to_none=True)
-        cam = gradcam.generate_cam(input_tensor, target_class)
 
-    # 8. Normalize and resize CAM
+        # Raw CAM: [1, 7, 7]
+        cam = gradcam.generate_cam(
+            input_tensor,
+            target_class
+        )
+
+    # 3. Prepare CAM for visualization
     cam = cam.detach()
-    cam = resize_cam(cam, size=(224, 224))
+
+    cam = resize_cam(
+        cam,
+        size=(input_tensor.shape[-2], input_tensor.shape[-1])
+    )
+
     cam = normalize_cam(cam)
 
     heatmap = cam.cpu().numpy()
 
-    # 9. Reconstruct the image in the model's input coordinates
-    mean = torch.tensor(weights.transforms().mean).view(3, 1, 1)
-    std = torch.tensor(weights.transforms().std).view(3, 1, 1)
+    # 4. Recover the image seen by ResNet50
+    display_tensor = (
+        input_tensor[0].detach().cpu() * std + mean
+    )
 
-    display_tensor = input_tensor[0].detach().cpu() * std + mean
     display_image = (
-        display_tensor.clamp(0, 1)
+        display_tensor
+        .clamp(0, 1)
         .permute(1, 2, 0)
         .numpy()
     )
 
-    # 10. Create colored heatmap and overlay
-    import matplotlib
+    # 5. Create colored heatmap
     colormap = matplotlib.colormaps["jet"]
 
     colored_heatmap = colormap(heatmap)[..., :3]
 
+    # 6. Create intensity-dependent overlay
+    # Low CAM values remain close to the original image.
+    alpha = 0.6 * heatmap[..., np.newaxis]
+
     overlay = (
-        0.5 * display_image
-        + 0.5 * colored_heatmap
+        (1 - alpha) * display_image
+        + alpha * colored_heatmap
     )
+
     overlay = np.clip(overlay, 0, 1)
 
-    # 11. Return results
+    # 7. Convert results to uint8
+    heatmap_image = (
+        colored_heatmap * 255
+    ).astype(np.uint8)
+
+    overlay_image = (
+        overlay * 255
+    ).astype(np.uint8)
+
+    # 8. Get predicted class name
     predicted_class = class_names[target_class]
 
     return (
         predicted_class,
         confidence,
-        (colored_heatmap * 255).astype(np.uint8),
-        (overlay * 255).astype(np.uint8),
+        heatmap_image,
+        overlay_image
     )

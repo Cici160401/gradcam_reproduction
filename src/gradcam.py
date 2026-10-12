@@ -8,7 +8,13 @@ class GradCAM:
 
         self.activations = None
         self.gradients = None
-        self.target_layer.register_forward_hook(self.save_activation)
+        self.hook_handle = self.target_layer.register_forward_hook(
+            self.save_activation
+        )
+
+    def remove_hooks(self):
+        """Remove registered forward hooks."""
+        self.hook_handle.remove()
 
     #aquí guardaremos Aᵏ
     def save_activation(self, module, input, output):
@@ -21,6 +27,13 @@ class GradCAM:
         self.gradients = gradient
 
     def generate_cam(self, input_tensor, target_class):
+         
+        self.activations = None
+        self.gradients = None
+
+        # Clear parameter gradients
+        self.model.zero_grad(set_to_none=True)
+
         #forward pass
         output = self.model(input_tensor)
         #score yc for the target class
@@ -40,7 +53,16 @@ class GradCAM:
         cam = weighted_activations.sum(dim=1)
         #we apply ReLU to the CAM to keep only positive values, as negative values are not informative for the class activation
         cam = F.relu(cam)
-        return cam
+        # Disconnect from autograd
+        result = cam.detach()
+
+        # Release references to computation tensors
+        self.activations = None
+        self.gradients = None
+
+        return result
+
+    
 
 # TODO: Engineering improvements
 #
