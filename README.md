@@ -172,7 +172,114 @@ gradcam-reproduction/
 
 ## Installation and usage
 
-PENDING TO DO.
+Instalación y Uso
+## Instalación y uso
+
+### 1. Requisitos previos
+
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
+
+- Python 3.12
+- Git
+- Una conexión a internet para descargar los pesos preentrenados de ResNet50 durante la primera ejecución.
+
+La aplicación utiliza PyTorch y puede ejecutarse en CPU, por lo que no es obligatorio contar con una GPU dedicada.
+
+### 2. Clonar el repositorio
+
+Clona el repositorio desde GitHub y accede al directorio del proyecto:
+
+```bash
+git clone https://github.com/Cici160401/gradcam_reproduction.git
+cd gradcam_reproduction
+```
+
+### 3. Crear un entorno virtual
+
+Se recomienda utilizar un entorno virtual para mantener aisladas las dependencias del proyecto.
+
+```bash
+python -m venv .venv
+```
+
+Activa el entorno virtual según tu sistema operativo.
+
+**Windows (PowerShell):**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+**Linux / macOS:**
+
+```bash
+source .venv/bin/activate
+```
+
+### 4. Instalar las dependencias
+
+Instala las bibliotecas necesarias mediante:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Las principales dependencias son PyTorch, TorchVision, NumPy, Matplotlib, Pillow y Gradio.
+
+### 5. Ejecutar Grad-CAM Explorer
+
+Desde la raíz del proyecto, ejecuta:
+
+```bash
+python app.py
+```
+
+Una vez iniciado el servidor, abre la siguiente dirección en tu navegador:
+
+**http://127.0.0.1:7860**
+
+### 6. Generar una explicación con Grad-CAM
+
+1. Carga una imagen desde la interfaz.
+2. Haz clic en **Generate Grad-CAM**.
+3. Espera a que ResNet50 clasifique la imagen y genere la explicación visual.
+4. Examina los resultados:
+   - **Predicted Class:** clase predicha por el modelo.
+   - **Prediction Confidence:** confianza asociada a la predicción.
+   - **Grad-CAM Heatmap:** mapa de calor que representa las contribuciones positivas a la clase seleccionada.
+   - **Grad-CAM Overlay:** superposición del mapa de calor sobre la imagen procesada.
+
+La aplicación utiliza ResNet50 preentrenada en ImageNet y extrae las activaciones de la capa convolucional `layer4[2].conv3`.
+
+**Importante:** los mapas Grad-CAM no representan segmentaciones exactas de los objetos ni demuestran relaciones causales. Son visualizaciones de las regiones que contribuyen positivamente al score de una clase según el método utilizado.
+
+### 7. Ejecutar los experimentos
+
+El repositorio también incluye experimentos independientes para reproducir y evaluar la implementación de Grad-CAM.
+
+**Experimento básico:**
+
+```bash
+python -m experiments.01_basic_gradcam
+```
+
+**Experimento de evaluación:**
+
+```bash
+python -m experiments.02_evaluation
+```
+
+Estos scripts permiten explorar el funcionamiento de Grad-CAM y comparar sus resultados con una implementación de referencia.
+
+Dependiendo del experimento, pueden necesitarse imágenes de ejemplo y bibliotecas adicionales.
+
+### Consideraciones adicionales
+
+- Los pesos preentrenados de ResNet50 se descargan automáticamente durante la primera ejecución.
+- El modelo no se entrena ni se ajusta nuevamente; se utiliza para clasificación y generación de explicaciones.
+- Aunque ResNet50 se encuentra en modo evaluación, Grad-CAM requiere calcular gradientes mediante backpropagation.
+- El tiempo de ejecución dependerá del hardware disponible.
+- La aplicación se ejecuta localmente y no requiere servicios de alojamiento externos.
 
 ## Key takeaways
 
